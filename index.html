@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Toll Group Communities Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.11.0/mapbox-gl.css" rel="stylesheet" />
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.11.0/mapbox-gl.js"></script>
+  <style>
+    body {
+      margin: 0; padding: 0; background: #22252D; color: #333;
+      font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center;
+    }
+    h1 { color: #fff; font-size: 2rem; margin: 32px 0 16px 0; text-align: center; }
+    #map-container {
+      width: 90vw; max-width: 1100px; height: 540px; border-radius: 14px;
+      overflow: hidden; box-shadow: 0 2px 16px rgba(0,0,0,0.13); margin-bottom: 32px;
+      background: #fff;
+    }
+    #map { width: 100%; height: 100%; }
+    .mapboxgl-popup {
+      max-width: 340px;
+      font: 15px/1.5 'Arial', sans-serif;
+    }
+    .mapboxgl-popup-content {
+      border-radius: 10px;
+      padding: 18px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+    }
+    .listing-img {
+      width: 100%; max-width: 260px; border-radius: 8px; margin: 10px 0;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+      display: block;
+    }
+    .listing-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 4px; }
+    .listing-address { color: #444; margin-bottom: 8px; }
+    .listing-links a {
+      color: #1076ad; text-decoration: none; margin-right: 12px; font-size: 0.98em;
+    }
+    .listing-links a:hover { text-decoration: underline; }
+    @media (max-width: 700px) {
+      #map-container { height: 320px; }
+      .mapboxgl-popup-content { padding: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="map-container"><div id="map"></div></div>
+  <script>
+    // --- CONFIG ---
+    mapboxgl.accessToken = 'pk.eyJ1IjoianVzdGluc2luY2xhaXJjcmVhdGl2ZSIsImEiOiJjbTl2dmJ2Z20wb3M4MnFtdzVqZ3l1YTdtIn0.yRr3osd2oFqcKbjg_3O1Hg'; // <-- Replace with your Mapbox token
+    const mapStyle = 'mapbox://styles/justinsinclaircreative/cma43snlr002t01sih71s9nng'; // Or your custom style
+    const sheetId = '1zNOmpkUNr-dwKaWR8iuvPsNTc9TKYbL3UFL90ci2Mxc'; // <-- Replace with your Google Sheet ID
+    const gid = '0'; // <-- Replace with your Sheet GID if needed
+
+    // --- INIT MAP ---
+    const map = new mapboxgl.Map({
+      container: 'map',
+      style: mapStyle,
+      center: [-121.052,47.739],
+      zoom: 6.75
+    });
+    map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+    // --- FETCH DATA FROM GOOGLE SHEETS ---
+    function fetchSheetData() {
+      return new Promise((resolve, reject) => {
+        window.google = { visualization: { Query: { setResponse: res => {
+            console.log('Google Sheet API response:', res);
+            const rows = res.table.rows;
+            const data = rows.slice(1).map(r => ({
+             title:   r.c[0]?.v || '',
+             address: r.c[1]?.v || '',
+             webpage: r.c[2]?.v || '',
+             gmap:    r.c[3]?.v || '',
+             image:   r.c[4]?.v || ''
+        })).filter(r => r.title && r.address);
+          resolve(data);
+        }}}};
+        const s = document.createElement('script');
+        s.src = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?gid=${gid}&tqx=out:json-in-script`;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+
+    // --- GEOCODE ADDRESSES ---
+    async function geocodeListings(listings) {
+      for (const l of listings) {
+        const key = `geo_${l.address}`;
+        const cached = localStorage.getItem(key);
+        if (cached) {
+          l.coords = JSON.parse(cached);
+        } else {
+          try {
+            const resp = await fetch(
+              `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(l.address)}.json?access_token=${mapboxgl.accessToken}`
+            );
+            const js = await resp.json();
+            l.coords = js.features[0]?.geometry.coordinates || null;
+            if (l.coords) localStorage.setItem(key, JSON.stringify(l.coords));
+          } catch {
+            l.coords = null;
+          }
+        }
+      }
+      return listings.filter(l => Array.isArray(l.coords));
+    }
+
+    // --- ADD MARKERS ---
+    function addMarkers(listings) {
+      listings.forEach(l => {
+        const el = document.createElement('div');
+        el.style.background = '#1076ad';
+        el.style.width = '32px';
+        el.style.height = '32px';
+        el.style.borderRadius = '50%';
+        el.style.boxShadow = '0 0 0 2px #fff';
+        el.style.display = 'flex';
+        el.style.alignItems = 'center';
+        el.style.justifyContent = 'center';
+        el.style.cursor = 'pointer';
+        el.innerHTML = `<svg width="18" height="24" viewBox="0 0 18 24" fill="none"><path d="M9 24C9 24 18 14.6274 18 9C18 4.02944 13.9706 0 9 0C4.02944 0 0 4.02944 0 9C0 14.6274 9 24 9 24Z" fill="#fff"/><circle cx="9" cy="9" r="4" fill="#1076ad"/></svg>`;
+        new mapboxgl.Marker(el)
+          .setLngLat(l.coords)
+          .setPopup(new mapboxgl.Popup({ offset: 24 }).setHTML(`
+            <div class="listing-title">${l.title}</div>
+            <div class="listing-address">${l.address}</div>
+            ${l.image ? `<img class="listing-img" src="${l.image}" alt="${l.title}">` : ''}
+            <div class="listing-links">
+              ${l.webpage ? `<a href="${l.webpage}" target="_blank">Property Page</a>` : ''}
+              ${l.gmap ? `<a href="${l.gmap}" target="_blank">Google Maps</a>` : ''}
+            </div>
+          `))
+          .addTo(map);
+      });
+      // Fit map to markers
+      if (listings.length) {
+        const bounds = listings.reduce((b, l) => b.extend(l.coords), new mapboxgl.LngLatBounds(listings[0].coords, listings[0].coords));
+        map.fitBounds(bounds, { padding: 40, maxZoom: 13, duration: 1200 });
+      }
+    }
+
+    // --- MAIN ---
+    (async function() {
+      try {
+        const listings = await fetchSheetData();
+        const geocoded = await geocodeListings(listings);
+        addMarkers(geocoded);
+      } catch (e) {
+        alert('Failed to load listings.');
+        console.error(e);
+      }
+    })();
+  </script>
+</body>
+</html>
