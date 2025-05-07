@@ -6,15 +6,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.11.0/mapbox-gl.css" rel="stylesheet" />
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.11.0/mapbox-gl.js"></script>
+  <script src="https://unpkg.com/supercluster@7.1.5/dist/supercluster.min.js"></script>
   <style>
+    /* ========== GENERAL LAYOUT ========== */
     body {
       margin: 0;
       padding: 0;
       background: #fff;
       color: #333;
       font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-      display: flex;
-      flex-direction: column;
       min-height: 100vh;
       width: 100vw;
       box-sizing: border-box;
@@ -27,6 +27,7 @@
       background: #fff;
       box-sizing: border-box;
     }
+    /* ========== MAP ========== */
     #map-container {
       flex: 2 1 0;
       min-width: 0;
@@ -39,8 +40,6 @@
       box-shadow: 0 2px 16px rgba(0,0,0,0.13);
     }
     #map { width: 100%; height: 100%; }
-
-    /* BUTTONS & SEARCH BAR */
     #recenter-btn {
       position: absolute;
       top: 18px;
@@ -49,8 +48,8 @@
       background: #fff;
       border: 1.5px solid #1076ad;
       border-radius: 50px;
-      width: 48px;
-      height: 48px;
+      width: 56px;
+      height: 56px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -59,11 +58,10 @@
       transition: background 0.2s, color 0.2s;
       padding: 0;
       color: #1076ad;
-      font-size: 1.3em;
+      font-size: 2em;
       font-weight: bold;
     }
     #recenter-btn:hover { background: #1076ad; color: #fff; }
-
     #search-bar-wrap {
       position: absolute;
       top: 18px;
@@ -113,7 +111,7 @@
     }
     .autocomplete-item:hover, .autocomplete-item.active { background: #eaf6fb; }
 
-    /* FILTERS & DIRECTORY */
+    /* ========== DIRECTORY ========== */
     #directory {
       position: relative;
       flex: 1 1 340px;
@@ -166,12 +164,6 @@
       display: flex;
       gap: 12px;
     }
-    #extra-filters .filter-row input {
-      flex: 1 1 0;
-      min-width: 0;
-      max-width: 100%;
-      text-align: center;
-    }
     #extra-filters .filter-actions {
       grid-column: 1 / 5;
       display: flex;
@@ -214,72 +206,216 @@
       color: #fff;
       border: 1.5px solid #1076ad;
     }
-    .directory-item::before,
-    .directory-item::after {
-      display: none !important;
+
+    /* Sleek Beds/Baths and Price filters */
+    .combo-filter {
+      display: flex;
+      align-items: center;
+      position: relative;
+      flex: 1 1 0;
+      min-width: 0;
+      max-width: 100%;
+      gap: 0;
+    }
+    #beds-baths-btn {
+      width: 100%;
+      border: 1.5px solid #1076ad;
+      background: #f2f7fa;
+      color: #1076ad;
+      border-radius: 8px;
+        font-size: 1.08em;
+      padding: 10px 0;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.18s, color 0.18s;
+    }
+    #beds-baths-btn.active {
+      background: #1076ad;
+      color: #fff;
+    }
+    #beds-baths-dropdown {
+      position: absolute;
+      top: 110%;
+      left: 0;
+      width: 100%;
+      border-radius: 14px;
+      Background: rgb(255, 255, 255);
+      border: #e0e0e0 1.5px solid;
+      z-index: 100;
+      padding: 8px 0;
+      display: none;
+      flex-direction: column;
+      gap: 0;
+      animation: fadeIn 0.18s;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-8px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+    .beds-baths-option {
+      padding: 14px 24px;
+      cursor: pointer;
+      text-align: left;
+      background: none;
+      border: none;
+      font-size: .9em;
+      color: #1076ad;
+      border-radius: 0;
+      transition: background 0.15s, color 0.15s, font-weight 0.15s;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+    }
+    .beds-baths-option.selected,
+    .beds-baths-option:hover {
+      background: #eaf6fb;
+      color: #1076ad;
+      font-weight: 700;
+    }
+    .beds-baths-option:not(:last-child) {
+      border-bottom: 1px solid #eaf6fb;
+    }
+    #price-filter {
+      display: flex;
+      align-items: center;
+      background: #f2f7fa;
+      border: 1.5px solid #1076ad;
+      border-radius: 8px;
+      padding: 0 8px;
+      gap: 4px;
+      width: 100%;
+    }
+    #price-filter input[type="number"] {
+      border: none;
+      background: transparent;
+      width: 60px;
+      text-align: center;
+      font-size: 1em;
+      color: #1076ad;
+      padding: 10px 0;
+      outline: none;
+      appearance: textfield;
+    }
+    .price-separator {
+      color: #1076ad;
+      font-weight: 600;
+      font-size: 1.1em;
+      padding: 0 2px;
     }
 
-    /* "Filter and Sort" sticky arrow */
-    #filter-sort-sticky {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  z-index: 100;
-  background: rgba(255,255,255,0.97);
-  text-align: center;
-  padding: 6px 0 2px 0;
-  font-size: 1.08em;
-  font-weight: 600;
-  color: #1076ad;
-  box-shadow: 0 2px 8px rgba(16,118,173,0.07);
-  cursor: pointer;
-  transition: opacity 0.18s;
-  margin-left: 0;
-  margin-right: 0;
-  overflow: visible;
-}
-    #filter-sort-sticky .arrow-up {
-      display: inline-block;
-      margin-right: 6px;
-      font-size: 1.2em;
-      vertical-align: middle;
+    /* Subtle hover for all filter buttons */
+    #beds-baths-btn:not(.active):hover,
+    #filter-available-btn:not(.active):hover,
+    #sort-select:hover,
+    #reset-filters-btn:hover,
+    #price-filter:hover,
+    .dir-details-btn:hover {
+      background: #eaf6fb !important;
+      color: #1076ad !important;
+      border-color: #1076ad !important;
+      transition: background 0.18s, color 0.18s, border 0.18s;
     }
-    #filter-sort-sticky::before,
-    #filter-sort-sticky::after {
-      content: "";
-      position: absolute;
-      top: 0; bottom: 0;
-      width: 32px;
-      z-index: 1;
-      pointer-events: none;
+
+    /* Make sure Reset matches the others on hover */
+    #reset-filters-btn:hover {
+      background: #eaf6fb !important;
+      color: #1076ad !important;
+      border: 1.5px solid #1076ad !important;
     }
-    #filter-sort-sticky::before {
-      left: 0;
-      background: linear-gradient(to right, rgba(255,255,255,0.97) 60%, rgba(255,255,255,0));
+
+    /* Subtle hover for price filter inputs */
+    #price-filter input[type="number"]:hover {
+      background: #f2f7fa;
+      border-radius: 6px;
     }
-    #filter-sort-sticky::after {
-      right: 0;
-      background: linear-gradient(to left, rgba(255,255,255,0.97) 60%, rgba(255,255,255,0));
+
+    /* Subtle hover for select (Sort) */
+    #sort-select:hover {
+      box-shadow: 0 2px 8px rgba(16,118,173,0.07);
     }
-    @media (max-width: 500px) {
-      #filter-sort-sticky {
-        left: 0;
-        transform: none;
-        width: 100vw;
+
+    /* Subtle hover for details button */
+    .dir-details-btn:hover {
+      background: #eaf6fb !important;
+      color: #1076ad !important;
+    }
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 900px) {
+      #main-layout { flex-direction: column; }
+      #directory {
+        order: 2;
+        border-top: none;
+        border-bottom: 1px solid #e0e0e0;
+        margin-left: 0;
         max-width: 100vw;
+        min-width: 0;
+        height: auto;
+        max-height: none;
+        background: transparent;
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+      }
+      #directory-filters {
+        padding-top: 0 !important;
+        margin-top: 0 !important;
+      }
+      #extra-filters {
+        padding-top: 8px !important;
+        margin-top: 0 !important;
+      }
+      #directory-list { display: flex; flex-direction: column; gap: 18px; }
+      #map-container { order: 1; border-radius: 0; max-width: 100vw; height: 340px; }
+    }
+    @media (max-width: 600px) {
+      #map-container { height: 340px; }
+      #search-bar-wrap, #autocomplete-list {
+        width: 40vw !important;
+        min-width: 140px;
+        max-width: 90vw;
+      }
+      #price-filter input[type="number"] {
+        width: 48px;
+        font-size: 0.98em;
+        padding: 8px 0;
+      }
+      #beds-baths-dropdown {
+        font-size: 1.08em;
+        min-width: 180px;
+        max-width: 98vw;
+      }
+      #extra-filters {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto auto;
+        padding: 10px 4vw 8px 4vw;
+        gap: 10px 0;
+      }
+      #extra-filters .filter-row,
+      #extra-filters .filter-actions {
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+      }
+      .combo-filter {
+        width: 100%;
+        min-width: 0;
+        max-width: 100vw;
+      }
+      #beds-baths-btn, #price-filter, #filter-available-btn, #sort-select, #reset-filters-btn {
+        font-size: 1.08em;
+        padding: 14px 0;
+        border-radius: 10px;
       }
     }
 
-    /* DIRECTORY ITEM STYLES */
+    /* ========== DIRECTORY ITEM STYLES ========== */
     .directory-item {
       display: flex;
       flex-direction: column;
       align-items: stretch;
       gap: 0;
-      padding-left: 0;
-      padding-right: 0;
       border-radius: 18px;
       background: #fff;
       box-shadow: 0 4px 24px rgba(16, 118, 173, 0.13), 0 2px 8px rgba(0, 0, 0, 0.10);
@@ -287,7 +423,6 @@
       border: 2px solid transparent;
       transition: border 0.2s, box-shadow 0.2s, background 0.2s;
       min-height: 120px;
-      overflow: hidden;
       margin: 0 6px;
       position: relative;
       overflow: visible;
@@ -299,7 +434,6 @@
     }
     .dir-img-wrap {
       width: 100%;
-      margin: 0;
       height: 180px;
       border-radius: 18px 18px 0 0;
       overflow: hidden;
@@ -399,7 +533,7 @@
       letter-spacing: 0.01em;
     }
 
-    /* MAP MARKERS & CLUSTERS */
+    /* ========== MAP MARKERS & CLUSTERS ========== */
     .custom-marker { background: none !important; }
     .custom-cluster {
       background: #fff;
@@ -420,39 +554,56 @@
     }
     .custom-cluster:hover { background: #1076ad; color: #fff; }
 
-    /* RESPONSIVE */
-    @media (max-width: 900px) {
-      #main-layout { flex-direction: column; }
-      #directory {
-        order: 2;
-        border-top: none;
-        border-bottom: 1px solid #e0e0e0;
-        margin-left: 0;
-        max-width: 100vw;
-        min-width: 0;
-        height: auto;
-        max-height: none;
-        background: transparent;
-        margin-top: 0 !important;
-        padding-top: 0 !important;
-      }
-      #directory-filters {
-        padding-top: 0 !important;
-        margin-top: 0 !important;
-      }
-      #extra-filters {
-        padding-top: 8px !important;
-        margin-top: 0 !important;
-      }
-      #directory-list { display: flex; flex-direction: column; gap: 18px; }
-      #map-container { order: 1; border-radius: 0; max-width: 100vw; height: 340px; }
+    /* ========== STICKY BAR ========== */
+    #filter-sort-sticky {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 100;
+      background: rgba(255,255,255,0.97);
+      text-align: center;
+      padding: 6px 0 2px 0;
+      font-size: 1.08em;
+      font-weight: 600;
+      color: #1076ad;
+      box-shadow: 0 2px 8px rgba(16,118,173,0.07);
+      cursor: pointer;
+      transition: opacity 0.18s;
+      margin-left: 0;
+      margin-right: 0;
+      overflow: visible;
     }
-    @media (max-width: 600px) {
-      #map-container { height: 340px; }
-      #search-bar-wrap, #autocomplete-list {
-        width: 40vw !important;
-        min-width: 140px;
-        max-width: 90vw;
+    #filter-sort-sticky .arrow-up {
+      display: inline-block;
+      margin-right: 6px;
+      font-size: 1.2em;
+      vertical-align: middle;
+    }
+    #filter-sort-sticky::before,
+    #filter-sort-sticky::after {
+      content: "";
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 32px;
+      z-index: 1;
+      pointer-events: none;
+    }
+    #filter-sort-sticky::before {
+      left: 0;
+      background: linear-gradient(to right, rgba(255,255,255,0.97) 60%, rgba(255,255,255,0));
+    }
+    #filter-sort-sticky::after {
+      right: 0;
+      background: linear-gradient(to left, rgba(255,255,255,0.97) 60%, rgba(255,255,255,0));
+    }
+    @media (max-width: 500px) {
+      #filter-sort-sticky {
+        left: 0;
+        transform: none;
+        width: 100vw;
+        max-width: 100vw;
       }
     }
   </style>
@@ -471,10 +622,15 @@
       <div id="directory-filters">
         <div id="extra-filters">
           <div class="filter-row">
-            <input id="filter-beds" type="number" step="1" min="0" max="10" placeholder="Beds">
-            <input id="filter-baths" type="number" step="0.5" min="0" max="10" placeholder="Baths">
-            <input id="filter-minprice" type="number" min="0" placeholder="Min $">
-            <input id="filter-maxprice" type="number" min="0" placeholder="Max $">
+            <div id="beds-baths-filter" class="combo-filter">
+              <button id="beds-baths-btn" type="button">Beds/Baths</button>
+              <div id="beds-baths-dropdown" class="dropdown"></div>
+            </div>
+            <div id="price-filter" class="combo-filter">
+              <input id="filter-minprice" type="number" min="0" step="50" placeholder="Min $" inputmode="numeric">
+              <span class="price-separator">–</span>
+              <input id="filter-maxprice" type="number" min="0" step="50" placeholder="Max $" inputmode="numeric">
+            </div>
           </div>
           <div class="filter-actions">
             <button id="filter-available-btn" type="button">Available</button>
@@ -495,13 +651,12 @@
       </div>
     </aside>
   </div>
-  <script src="https://unpkg.com/supercluster@7.1.5/dist/supercluster.min.js"></script>
   <script>
     // =========================
     // CONFIG & CONSTANTS
     // =========================
     mapboxgl.accessToken = 'pk.eyJ1IjoianVzdGluc2luY2xhaXJjcmVhdGl2ZSIsImEiOiJjbTl2dmJ2Z20wb3M4MnFtdzVqZ3l1YTdtIn0.yRr3osd2oFqcKbjg_3O1Hg';
-    const mapStyle = 'mapbox://styles/justinsinclaircreative/cma43snlr002t01sih71s9nng';
+    const mapStyle = 'mapbox://styles/justinsinclaircreative/cmaeh09cm00om01rf5x1o17gk';
     const sheetId = '1zNOmpkUNr-dwKaWR8iuvPsNTc9TKYbL3UFL90ci2Mxc';
     const gid = '0';
     const markerPNGs = {
@@ -509,16 +664,6 @@
       hover:  'https://sinclaircreative.github.io/tollgroupmap/tollgroupiconhover.png',
       active: 'https://sinclaircreative.github.io/tollgroupmap/tollgroupiconclick.png'
     };
-
-    let lowestMinPrice = 0;
-    function setLowestMinPrice(listings) {
-      const prices = listings.map(l => l.minprice).filter(p => typeof p === 'number' && !isNaN(p));
-      lowestMinPrice = prices.length ? Math.min(...prices) : 0;
-      const minPriceInput = document.getElementById('filter-minprice');
-      const maxPriceInput = document.getElementById('filter-maxprice');
-      if (minPriceInput) minPriceInput.min = lowestMinPrice;
-      if (maxPriceInput) maxPriceInput.min = lowestMinPrice;
-    }
 
     // =========================
     // MAP INITIALIZATION
@@ -533,7 +678,6 @@
       zoom: initialZoom
     });
     map.addControl(new mapboxgl.NavigationControl(), 'top-right');
-
     document.getElementById('recenter-btn').onclick = () => {
       map.flyTo({ center: initialCenter, zoom: initialZoom, duration: 300 });
     };
@@ -547,14 +691,12 @@
           const rows = res.table.rows;
           const data = rows.map(r => {
             const cells = Array.from({length: 10}, (_, i) => r.c[i]?.v ?? '');
-
             let imgCell = cells[9];
             if (typeof imgCell === 'object' && imgCell !== null && imgCell.u) imgCell = imgCell.u;
             if (typeof imgCell === 'string' && imgCell.startsWith('=IMAGE(')) {
               const match = imgCell.match(/=IMAGE\("([^"]+)"/);
               if (match) imgCell = match[1];
             }
-
             return {
               title:   cells[0] || '',
               address: cells[1] || '',
@@ -611,25 +753,6 @@
       return listings.filter(l => Array.isArray(l.coords));
     }
 
-    function getMarkerImg(state = 'normal') {
-      const url = markerPNGs[state] || markerPNGs.normal;
-      return `<img src="${url}" alt="Map marker" style="width:48px;height:48px;display:block;object-fit:contain;">`;
-    }
-
-    function getDistanceMeters(coord1, coord2) {
-      const toRad = d => d * Math.PI / 180;
-      const [lon1, lat1] = coord1;
-      const [lon2, lat2] = coord2;
-      const R = 6371000;
-      const dLat = toRad(lat2 - lat1);
-      const dLon = toRad(lon2 - lon1);
-      const a = Math.sin(dLat/2)**2 +
-                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-                Math.sin(dLon/2)**2;
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      return R * c;
-    }
-
     // =========================
     // MAIN DIRECTORY & MAP LOGIC
     // =========================
@@ -638,10 +761,7 @@
       let sortOrder = 'az';
       let searchTerm = '';
       let activeIdx = null;
-      let filterBeds = '';
-      let filterBaths = '';
-      let filterMinPrice = '';
-      let filterMaxPrice = '';
+      let selectedBedsBaths = []; // Now an array
       let filterAvailableOnly = false;
       const markers = [];
       let clusterIndex = null;
@@ -652,52 +772,147 @@
       const searchBar = document.getElementById('search-bar');
       const sortSelect = document.getElementById('sort-select');
       const autocompleteList = document.getElementById('autocomplete-list');
-      const filterBedsSelect = document.getElementById('filter-beds');
-      const filterBathsSelect = document.getElementById('filter-baths');
       const filterMinPriceInput = document.getElementById('filter-minprice');
       const filterMaxPriceInput = document.getElementById('filter-maxprice');
       const filterAvailableBtn = document.getElementById('filter-available-btn');
       const directory = document.getElementById('directory');
       const stickyBar = document.getElementById('filter-sort-sticky');
       const extraFilters = document.getElementById('extra-filters');
+      const bedsBathsBtn = document.getElementById('beds-baths-btn');
+      const bedsBathsDropdown = document.getElementById('beds-baths-dropdown');
+
+      // --- BEDS/BATHS DROPDOWN LOGIC ---
+      function extractBedsBaths(layout) {
+        if (!layout) return [];
+        return layout.split(',')
+          .map(opt => {
+            // Match formats like "2 Bed 2 Bath", "2BR 2BA", "2 bed, 2 bath", etc.
+            const match = opt.match(/(\d+(?:\.5)?)\s*(?:bed|br)[^\d]*(\d+(?:\.5)?)\s*(?:bath|ba)/i);
+            return match ? { beds: parseFloat(match[1]), baths: parseFloat(match[2]) } : {};
+          })
+          .filter(bb => bb.beds && bb.baths);
+      }
+      function populateBedsBathsOptions() {
+        const options = new Set();
+        listings.forEach(l => {
+          const bedsBaths = extractBedsBaths(l.layout);
+          bedsBaths.forEach(bb => {
+            if (bb.beds && bb.baths) {
+              options.add(`${bb.beds} Bed / ${bb.baths} Bath`);
+            }
+          });
+        });
+        const sorted = Array.from(options).sort((a, b) => {
+          const [ab, abt] = a.split(' Bed / ');
+          const [bb_, bbt] = b.split(' Bed / ');
+          return Number(ab) - Number(bb_) || Number(abt) - Number(bbt);
+        });
+        bedsBathsDropdown.innerHTML = '';
+        sorted.forEach(opt => {
+          const item = document.createElement('div');
+          item.className = 'beds-baths-option' + (selectedBedsBaths.includes(opt) ? ' selected' : '');
+          item.tabIndex = 0;
+          item.textContent = opt;
+          item.onmouseenter = () => item.classList.add('hover');
+          item.onmouseleave = () => item.classList.remove('hover');
+          item.onclick = (e) => {
+            e.stopPropagation();
+            if (selectedBedsBaths.includes(opt)) {
+              selectedBedsBaths = selectedBedsBaths.filter(x => x !== opt);
+            } else {
+              selectedBedsBaths.push(opt);
+            }
+            populateBedsBathsOptions(); // Refresh selection states
+            applyFilters();
+          };
+          bedsBathsDropdown.appendChild(item);
+        });
+        // Add a "Clear" option
+        const clearBtn = document.createElement('div');
+        clearBtn.className = 'beds-baths-option clear-option';
+        clearBtn.textContent = 'Any';
+        clearBtn.tabIndex = 0;
+        clearBtn.onmouseenter = () => clearBtn.classList.add('hover');
+        clearBtn.onmouseleave = () => clearBtn.classList.remove('hover');
+        clearBtn.onclick = (e) => {
+          e.stopPropagation();
+          selectedBedsBaths = [];
+          populateBedsBathsOptions();
+          applyFilters();
+        };
+        bedsBathsDropdown.appendChild(clearBtn);
+        // Update button label
+        if (selectedBedsBaths.length === 0) {
+          bedsBathsBtn.textContent = 'Beds/Baths';
+          bedsBathsBtn.classList.remove('active');
+        } else {
+          bedsBathsBtn.textContent = `Beds/Baths (${selectedBedsBaths.length})`;
+          bedsBathsBtn.classList.add('active');
+        }
+      }
+      populateBedsBathsOptions();
+
+      bedsBathsBtn.onclick = (e) => {
+        e.stopPropagation();
+        bedsBathsDropdown.style.display = bedsBathsDropdown.style.display === 'none' ? 'flex' : 'none';
+      };
+      document.addEventListener('click', () => {
+        bedsBathsDropdown.style.display = 'none';
+      });
+
+      // --- PRICE FILTERS: DYNAMIC MIN/MAX, STEP 50 ---
+      filterMinPriceInput.step = 50;
+      filterMaxPriceInput.step = 50;
+      let allPrices = listings
+        .map(l => [l.minprice, l.maxprice])
+        .flat()
+        .filter(p => typeof p === 'number' && !isNaN(p));
+      let globalMinPrice = Math.min(...allPrices);
+      let globalMaxPrice = Math.max(...allPrices);
+      filterMinPriceInput.min = globalMinPrice;
+      filterMinPriceInput.max = globalMaxPrice;
+      filterMaxPriceInput.min = globalMinPrice;
+      filterMaxPriceInput.max = globalMaxPrice;
+      filterMinPriceInput.addEventListener('input', e => {
+        let minVal = parseInt(e.target.value, 10) || '';
+        filterMinPriceInput.value = minVal;
+        filterMaxPriceInput.min = minVal || globalMinPrice;
+        if (filterMaxPriceInput.value && parseInt(filterMaxPriceInput.value, 10) < minVal) {
+          filterMaxPriceInput.value = minVal;
+        }
+        applyFilters();
+      });
+      filterMaxPriceInput.addEventListener('input', e => {
+        let maxVal = parseInt(e.target.value, 10) || '';
+        filterMaxPriceInput.value = maxVal;
+        filterMinPriceInput.max = maxVal || globalMaxPrice;
+        if (filterMinPriceInput.value && parseInt(filterMinPriceInput.value, 10) > maxVal) {
+          filterMinPriceInput.value = maxVal;
+        }
+        applyFilters();
+      });
 
       // --- RESET FILTERS BUTTON ---
-      const resetBtn = document.getElementById('reset-filters-btn');
-      resetBtn.onclick = function() {
-        filterBedsSelect.value = '';
-        filterBathsSelect.value = '';
+      document.getElementById('reset-filters-btn').onclick = function() {
+        selectedBedsBaths = [];
+        bedsBathsBtn.textContent = 'Beds/Baths';
+        bedsBathsBtn.classList.remove('active');
         filterMinPriceInput.value = '';
         filterMaxPriceInput.value = '';
-        filterBeds = '';
-        filterBaths = '';
-        filterMinPrice = '';
-        filterMaxPrice = '';
+        filterMinPriceInput.min = globalMinPrice;
+        filterMinPriceInput.max = globalMaxPrice;
+        filterMaxPriceInput.min = globalMinPrice;
+        filterMaxPriceInput.max = globalMaxPrice;
         filterAvailableOnly = false;
         filterAvailableBtn.classList.remove('active');
         applyFilters();
-        // Recenter the map
         map.flyTo({ center: initialCenter, zoom: initialZoom, duration: 300 });
       };
-
-      // --- BEDS/BATHS FILTERS: RESET ON 0 ---
-      filterBedsSelect.addEventListener('input', e => {
-        if (parseInt(e.target.value, 10) <= 0) {
-          e.target.value = '';
-          filterBeds = '';
-        } else {
-          filterBeds = e.target.value;
-        }
+      filterAvailableBtn.onclick = function() {
+        filterAvailableOnly = !filterAvailableOnly;
+        filterAvailableBtn.classList.toggle('active', filterAvailableOnly);
         applyFilters();
-      });
-      filterBathsSelect.addEventListener('input', e => {
-        if (parseFloat(e.target.value) <= 0) {
-          e.target.value = '';
-          filterBaths = '';
-        } else {
-          filterBaths = e.target.value;
-        }
-        applyFilters();
-      });
+      };
 
       // --- CLUSTERING SETUP ---
       const geojsonFeatures = listings.map((l, i) => ({
@@ -729,7 +944,6 @@
         el.style.justifyContent = 'center';
         el.setAttribute('tabindex', '0');
         el.setAttribute('aria-label', `${l.title}, ${l.address}`);
-
         const img = document.createElement('img');
         img.src = markerPNGs.normal;
         img.alt = "Map marker";
@@ -738,12 +952,8 @@
         img.style.display = "block";
         img.style.objectFit = "contain";
         el.appendChild(img);
-
-        // --- HOVER LOGIC ---
         el.addEventListener('mouseenter', () => { img.src = markerPNGs.hover; });
         el.addEventListener('mouseleave', () => { img.src = markerPNGs[activeIdx === i ? 'active' : 'normal']; });
-
-        // --- CLICK LOGIC ---
         el.addEventListener('click', e => {
           e.stopPropagation();
           setActiveMarker(i);
@@ -771,11 +981,9 @@
             activateListing(i, listings, filteredListings, markers, renderDirectory);
           }
         });
-
         const marker = new mapboxgl.Marker(el, { clickTolerance: 8 })
           .setLngLat(l.coords)
           .addTo(map);
-
         markers.push(marker);
         markerElements.push({ marker, el, i });
       });
@@ -783,28 +991,19 @@
       // --- CLUSTER RENDERING ---
       function renderClusters() {
         clearClusterMarkers();
-
-        // Hide all markers by default
         markerElements.forEach(({ marker }) => {
           marker.getElement().style.display = "none";
         });
-
         const bounds = map.getBounds();
         const zoom = Math.round(map.getZoom());
         const clusters = clusterIndex.getClusters([
           bounds.getWest(), bounds.getSouth(),
           bounds.getEast(), bounds.getNorth()
         ], zoom);
-
-        // Track which marker indices are shown by clusters or as single points
         const shownIndices = new Set();
-
         clusters.forEach(cluster => {
           const [lng, lat] = cluster.geometry.coordinates;
           if (cluster.properties.cluster) {
-            // Hide all markers that are part of this cluster (do not show them)
-            // (No need to add to shownIndices)
-            // Render the cluster marker
             const count = cluster.properties.point_count;
             const size = 48 * Math.pow(1.05, count - 1);
             const el = document.createElement('div');
@@ -828,19 +1027,14 @@
               .addTo(map);
             clusterMarkers.push(marker);
           } else if (typeof cluster.properties.index === "number") {
-            // This is a single point, show its marker
             shownIndices.add(cluster.properties.index);
           }
         });
-
-        // Show only markers that are not clustered
         shownIndices.forEach(idx => {
           if (markerElements[idx]) {
             markerElements[idx].marker.getElement().style.display = "";
           }
         });
-
-        // After clusters are rendered, update the directory to only show listings in view
         applyFilters();
       }
 
@@ -898,87 +1092,6 @@
         }
       });
 
-      // --- FILTERS ---
-      filterMinPriceInput.step = 50;
-      filterMaxPriceInput.step = 50;
-
-      filterMinPriceInput.addEventListener('focus', function() {
-        if (!filterMinPriceInput.value || parseInt(filterMinPriceInput.value, 10) < lowestMinPrice) {
-          filterMinPriceInput.value = lowestMinPrice;
-          filterMinPrice = lowestMinPrice;
-          applyFilters();
-        }
-      });
-      filterMaxPriceInput.addEventListener('focus', function() {
-        if (!filterMaxPriceInput.value || parseInt(filterMaxPriceInput.value, 10) < lowestMinPrice) {
-          filterMaxPriceInput.value = lowestMinPrice;
-          filterMaxPrice = lowestMinPrice;
-          applyFilters();
-        }
-      });
-
-      function clampToStep(val, base) {
-        val = Math.round((val - base) / 50) * 50 + base;
-        if (val < base) val = base;
-        return val;
-      }
-
-      filterMinPriceInput.addEventListener('input', e => {
-        let val = parseInt(e.target.value, 10) || 0;
-        if (val <= 0) {
-          e.target.value = '';
-          filterMinPrice = '';
-        } else {
-          val = clampToStep(val, lowestMinPrice);
-          e.target.value = val;
-          filterMinPrice = val;
-        }
-        applyFilters();
-      });
-      filterMinPriceInput.addEventListener('change', e => {
-        let val = parseInt(e.target.value, 10) || 0;
-        if (val <= 0) {
-          e.target.value = '';
-          filterMinPrice = '';
-        } else {
-          val = clampToStep(val, lowestMinPrice);
-          e.target.value = val;
-          filterMinPrice = val;
-        }
-        applyFilters();
-      });
-
-      filterMaxPriceInput.addEventListener('input', e => {
-        let val = parseInt(e.target.value, 10) || 0;
-        if (val <= 0) {
-          e.target.value = '';
-          filterMaxPrice = '';
-        } else {
-          val = clampToStep(val, lowestMinPrice);
-          e.target.value = val;
-          filterMaxPrice = val;
-        }
-        applyFilters();
-      });
-      filterMaxPriceInput.addEventListener('change', e => {
-        let val = parseInt(e.target.value, 10) || 0;
-        if (val <= 0) {
-          e.target.value = '';
-          filterMaxPrice = '';
-        } else {
-          val = clampToStep(val, lowestMinPrice);
-          e.target.value = val;
-          filterMaxPrice = val;
-        }
-        applyFilters();
-      });
-
-      filterAvailableBtn.onclick = function() {
-        filterAvailableOnly = !filterAvailableOnly;
-        filterAvailableBtn.classList.toggle('active', filterAvailableOnly);
-        applyFilters();
-      };
-
       // --- SORT BUTTON LABELS ---
       function updateSortLabel() {
         let label = '';
@@ -1021,35 +1134,34 @@
         );
       }
 
-      function extractBedsBaths(layout) {
-        if (!layout) return [];
-        return layout.split(',').map(opt => {
-          const match = opt.match(/(\d+(?:\.5)?)\s*bed.*?(\d+(?:\.5)?)\s*bath/i);
-          return match ? { beds: parseFloat(match[1]), baths: parseFloat(match[2]) } : {};
-        }).filter(bb => bb.beds && bb.baths);
-      }
-
       // --- FILTER & DIRECTORY RENDERING ---
       function applyFilters() {
         const bounds = map.getBounds();
         filteredListings = listings.filter(l => {
           if (!l.coords) return false;
           const [lng, lat] = l.coords;
-          // Only filter out if truly outside the visible map area
           if (
             lng < bounds.getWest() || lng > bounds.getEast() ||
             lat < bounds.getSouth() || lat > bounds.getNorth()
           ) return false;
           if (filterAvailableOnly && l.available !== 'yes') return false;
-          const bedsBaths = extractBedsBaths(l.layout);
-          if (filterBeds && !bedsBaths.some(bb => Number(bb.beds) == Number(filterBeds))) return false;
-          if (filterBaths && !bedsBaths.some(bb => Number(bb.baths) == Number(filterBaths))) return false;
-          if (filterMinPrice && (l.minprice === null || l.minprice < parseInt(filterMinPrice))) return false;
-          if (filterMaxPrice && (l.maxprice === null || l.maxprice > parseInt(filterMaxPrice))) return false;
+          if (selectedBedsBaths.length > 0) {
+            const bedsBaths = extractBedsBaths(l.layout);
+            // At least one selected layout must match
+            if (!selectedBedsBaths.some(sel => {
+              const [bedsStr, bathsStr] = sel.split(' / ');
+              const beds = parseFloat(bedsStr);
+              const baths = parseFloat(bathsStr);
+              return bedsBaths.some(bb => bb.beds === beds && bb.baths === baths);
+            })) return false;
+          }
+          let minVal = parseInt(filterMinPriceInput.value, 10) || globalMinPrice;
+          let maxVal = parseInt(filterMaxPriceInput.value, 10) || globalMaxPrice;
+          if (l.maxprice !== null && l.maxprice < minVal) return false;
+          if (l.minprice !== null && l.minprice > maxVal) return false;
           if (searchTerm && !searchMatch(l, searchTerm)) return false;
           return true;
         });
-
         renderDirectory(null);
         if (directoryCount) {
           directoryCount.textContent = `${filteredListings.length} communit${filteredListings.length === 1 ? 'y' : 'ies'}`;
@@ -1111,7 +1223,6 @@
             bedBathText += `  ${minBaths} Bath`;
           }
           bedBathText = bedBathText.trim();
-
           let priceText = '';
           if (l.minprice !== null && l.maxprice !== null && l.minprice !== l.maxprice) {
             priceText = `$${l.minprice.toLocaleString()} - $${l.maxprice.toLocaleString()}`;
@@ -1120,7 +1231,6 @@
           } else if (l.maxprice !== null) {
             priceText = `$${l.maxprice.toLocaleString()}`;
           }
-
           const div = document.createElement('div');
           div.className = 'directory-item' + (i === activeIdx ? ' active' : '');
           div.tabIndex = 0;
@@ -1248,13 +1358,10 @@
 
       // --- Sticky "Filter and Sort" arrow logic ---
       function checkStickyBar() {
-        // Show sticky bar if filter bar is scrolled out of view in the directory
         const filtersRect = extraFilters.getBoundingClientRect();
         const dirRect = directory.getBoundingClientRect();
-        // Find the left/right/top of the directory in viewport
         const dirLeft = dirRect.left;
         const dirTop = dirRect.top;
-        // Position sticky bar at the top of the directory, matching its width and left
         if (filtersRect.bottom < dirRect.top + 8) {
           stickyBar.style.display = 'block';
           stickyBar.style.left = dirLeft + 'px';
@@ -1269,12 +1376,10 @@
       window.addEventListener('scroll', checkStickyBar);
       setTimeout(checkStickyBar, 500);
 
-      // Scroll to top of filters when sticky bar is clicked
       stickyBar.onclick = () => {
         directory.scrollTo({ top: 0, behavior: 'smooth' });
       };
 
-      // Center text for all filters
       document.querySelectorAll('#extra-filters input, #extra-filters select, #extra-filters button').forEach(el => {
         el.style.textAlign = 'center';
       });
@@ -1287,13 +1392,27 @@
       try {
         const listings = await fetchSheetData();
         const geocoded = await geocodeListings(listings);
-        setLowestMinPrice(geocoded);
         addMarkersAndDirectory(geocoded);
       } catch (e) {
         alert('Failed to load listings.');
         console.error(e);
       }
     })();
+
+    // --- Utility for marker distance ---
+    function getDistanceMeters(coord1, coord2) {
+      const toRad = d => d * Math.PI / 180;
+      const [lon1, lat1] = coord1;
+      const [lon2, lat2] = coord2;
+      const R = 6371000;
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a = Math.sin(dLat/2)**2 +
+                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                Math.sin(dLon/2)**2;
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
   </script>
 </body>
 </html>
