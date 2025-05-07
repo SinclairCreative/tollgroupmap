@@ -433,9 +433,19 @@
         height: auto;
         max-height: none;
         background: transparent;
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+      }
+      #directory-filters {
+        padding-top: 0 !important;
+        margin-top: 0 !important;
+      }
+      #extra-filters {
+        padding-top: 8px !important;
+        margin-top: 0 !important;
       }
       #directory-list { display: flex; flex-direction: column; gap: 18px; }
-      #map-container { order: 1; border-radius: 0; max-width: 100vw; height: 340px; }
+      #map-container { order: 1; border-radius: 0; max-width: 100vw; height: 240px; }
     }
     @media (max-width: 600px) {
       #map-container { height: 220px; }
@@ -665,6 +675,8 @@
         filterAvailableOnly = false;
         filterAvailableBtn.classList.remove('active');
         applyFilters();
+        // Recenter the map
+        map.flyTo({ center: initialCenter, zoom: initialZoom, duration: 300 });
       };
 
       // --- BEDS/BATHS FILTERS: RESET ON 0 ---
