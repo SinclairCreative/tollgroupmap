@@ -7,9 +7,6 @@
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.11.0/mapbox-gl.css" rel="stylesheet" />
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.11.0/mapbox-gl.js"></script>
   <style>
-    /* =========================
-       GENERAL LAYOUT & STYLES
-    ========================== */
     body {
       margin: 0;
       padding: 0;
@@ -26,31 +23,28 @@
       display: flex;
       flex-direction: row;
       width: 100vw;
-      height: 100vh;
+      min-height: 100vh;
       background: #fff;
       box-sizing: border-box;
     }
     #map-container {
       flex: 2 1 0;
       min-width: 0;
-      height: 100vh;
-      max-width: 1100px;
-      border-radius: 0 14px 14px 0;
-      overflow: hidden;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.13);
       background: #fff;
       position: relative;
       display: flex;
       flex-direction: column;
+      border-radius: 0 14px 14px 0;
+      overflow: hidden;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.13);
     }
     #map { width: 100%; height: 100%; }
 
-    /* =========================
-       BUTTONS & SEARCH BAR
-    ========================== */
-    #recenter-btn, #geolocate-btn {
+    /* BUTTONS & SEARCH BAR */
+    #recenter-btn {
       position: absolute;
       top: 18px;
+      left: 18px;
       z-index: 10;
       background: #fff;
       border: 1.5px solid #1076ad;
@@ -64,13 +58,11 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.07);
       transition: background 0.2s, color 0.2s;
       padding: 0;
+      color: #1076ad;
+      font-size: 1.3em;
+      font-weight: bold;
     }
-    #recenter-btn { left: 18px; color: #1076ad; font-size: 1.3em; font-weight: bold; }
     #recenter-btn:hover { background: #1076ad; color: #fff; }
-    #geolocate-btn { left: 74px; }
-    #geolocate-btn svg { width: 28px; height: 28px; display: block; }
-    #geolocate-btn:hover { background: #1076ad; }
-    #geolocate-btn:hover svg path { stroke: #fff; }
 
     #search-bar-wrap {
       position: absolute;
@@ -121,22 +113,21 @@
     }
     .autocomplete-item:hover, .autocomplete-item.active { background: #eaf6fb; }
 
-    /* =========================
-       DIRECTORY SIDEBAR
-    ========================== */
+    /* FILTERS & DIRECTORY */
     #directory {
+      position: relative;
       flex: 1 1 340px;
       max-width: 400px;
       min-width: 280px;
+      height: 100vh;
+      max-height: 100vh;
+      overflow-y: auto;
       background: transparent;
       padding: 0;
-      overflow-y: auto;
       border-left: none;
       box-shadow: none;
       display: flex;
       flex-direction: column;
-      height: 100vh;
-      max-height: 100vh;
       scrollbar-width: thin;
       scrollbar-color: #ccc #fff;
       margin-left: 10px;
@@ -144,38 +135,144 @@
     }
     #directory::-webkit-scrollbar-thumb { background: #ccc; border-radius: 8px; }
     #directory::-webkit-scrollbar-track { background: #f8f9fa; border-radius: 8px; }
-    #filters-sort {
-      display: flex;
-      align-items: center;
-      gap: 18px;
-      padding: 18px 24px 0 24px;
-      background: #ffffff;
-      position: sticky;
-      top: 0;
-      z-index: 2;
-    }
-    #sort-select {
-      border: none;
-      background: #e9ecef;
-      border-radius: 8px;
-      padding: 7px 16px;
-      font-size: 1em;
-      color: #222;
-      font-family: inherit;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-      transition: background 0.2s;
-    }
-    #sort-select:focus { outline: 2px solid #1076ad; background: #fff; }
     #directory-list {
       padding: 18px 0 24px 0;
       display: flex;
       flex-direction: column;
       gap: 18px;
+      position: relative;
+    }
+    #directory-filters {
+      width: 100%;
+      padding: 0 0 8px 0;
+      background: transparent;
+      z-index: 2;
+    }
+    #extra-filters {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      grid-template-rows: auto auto;
+      gap: 12px 16px;
+      background: rgba(255,255,255,0.97);
+      border-radius: 12px 12px 0 0;
+      padding: 18px 18px 10px 18px;
+      width: 100%;
+      box-sizing: border-box;
+      margin-bottom: 0;
+      text-align: center;
+    }
+    #extra-filters .filter-row {
+      grid-column: 1 / 5;
+      display: flex;
+      gap: 12px;
+    }
+    #extra-filters .filter-row input {
+      flex: 1 1 0;
+      min-width: 0;
+      max-width: 100%;
+      text-align: center;
+    }
+    #extra-filters .filter-actions {
+      grid-column: 1 / 5;
+      display: flex;
+      flex-direction: row;
+      gap: 12px;
+      width: 100%;
+      justify-content: center;
+    }
+    #extra-filters button,
+    #extra-filters select {
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      font-weight: 600;
+      border-radius: 8px;
+      box-sizing: border-box;
+      padding: 10px 0;
+      margin-bottom: 0;
+      text-align: center;
+    }
+    #extra-filters button {
+      border: 1.5px solid #1076ad;
+      background: #f2f7fa;
+      color: #1076ad;
+      transition: background 0.18s, color 0.18s, border 0.18s;
+      cursor: pointer;
+    }
+    #extra-filters button.active {
+      background: #1076ad;
+      color: #fff;
+    }
+    #extra-filters #reset-filters-btn {
+      border: 1.5px solid #888;
+      background: #f8f8f8;
+      color: #444;
+      font-weight: 600;
+    }
+    #extra-filters #reset-filters-btn:hover {
+      background: #1076ad;
+      color: #fff;
+      border: 1.5px solid #1076ad;
+    }
+    .directory-item::before,
+    .directory-item::after {
+      display: none !important;
     }
 
-    /* =========================
-       DIRECTORY ITEM STYLES
-    ========================== */
+    /* "Filter and Sort" sticky arrow */
+    #filter-sort-sticky {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 100;
+  background: rgba(255,255,255,0.97);
+  text-align: center;
+  padding: 6px 0 2px 0;
+  font-size: 1.08em;
+  font-weight: 600;
+  color: #1076ad;
+  box-shadow: 0 2px 8px rgba(16,118,173,0.07);
+  cursor: pointer;
+  transition: opacity 0.18s;
+  margin-left: 0;
+  margin-right: 0;
+  overflow: visible;
+}
+    #filter-sort-sticky .arrow-up {
+      display: inline-block;
+      margin-right: 6px;
+      font-size: 1.2em;
+      vertical-align: middle;
+    }
+    #filter-sort-sticky::before,
+    #filter-sort-sticky::after {
+      content: "";
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 32px;
+      z-index: 1;
+      pointer-events: none;
+    }
+    #filter-sort-sticky::before {
+      left: 0;
+      background: linear-gradient(to right, rgba(255,255,255,0.97) 60%, rgba(255,255,255,0));
+    }
+    #filter-sort-sticky::after {
+      right: 0;
+      background: linear-gradient(to left, rgba(255,255,255,0.97) 60%, rgba(255,255,255,0));
+    }
+    @media (max-width: 500px) {
+      #filter-sort-sticky {
+        left: 0;
+        transform: none;
+        width: 100vw;
+        max-width: 100vw;
+      }
+    }
+
+    /* DIRECTORY ITEM STYLES */
     .directory-item {
       display: flex;
       flex-direction: column;
@@ -185,29 +282,32 @@
       padding-right: 0;
       border-radius: 18px;
       background: #fff;
-      box-shadow: 0 4px 24px rgba(16, 118, 173, 0.13), 0 2px 8px rgba(0,0,0,0.10);
+      box-shadow: 0 4px 24px rgba(16, 118, 173, 0.13), 0 2px 8px rgba(0, 0, 0, 0.10);
       cursor: pointer;
       border: 2px solid transparent;
       transition: border 0.2s, box-shadow 0.2s, background 0.2s;
       min-height: 120px;
       overflow: hidden;
       margin: 0 6px;
+      position: relative;
+      overflow: visible;
     }
     .directory-item.active {
       border: 2px solid #1076ad;
-      box-shadow: 0 8px 32px rgba(16, 118, 173, 0.18), 0 4px 16px rgba(0,0,0,0.13);
+      box-shadow: 0 8px 32px rgba(16, 118, 173, 0.18), 0 4px 16px rgba(0, 0, 0, 0.13);
       background: #eaf6fb;
     }
     .dir-img-wrap {
-      width: calc(100% + 10px);
-      margin: 0 -5px;
+      width: 100%;
+      margin: 0;
       height: 180px;
       border-radius: 18px 18px 0 0;
       overflow: hidden;
       background: #eee;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
+      position: relative;
     }
     .dir-img-wrap img {
       width: 100%;
@@ -219,7 +319,7 @@
     }
     .directory-item:hover .dir-img-wrap img { transform: scale(1.04); }
     .no-img {
-      width: 360px;
+      width: 100%;
       height: 180px;
       background: #eee;
       border-radius: 18px 18px 0 0;
@@ -235,6 +335,44 @@
     }
     .dir-title { font-size: 1.18rem; font-weight: 600; margin-bottom: 2px; color: #222; letter-spacing: -0.01em; margin-left: 10px !important; }
     .dir-address { color: #444; font-size: 1.01em; margin-bottom: 2px; margin-left: 10px !important; margin-top: 2px !important; }
+    .dir-layout-price-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      margin-top: 8px;
+      margin-bottom: 2px;
+    }
+    .dir-layout-col, .dir-price-col {
+      flex: 1 1 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .dir-layout-col {
+      font-size: 1.05em;
+      color: #444;
+      font-weight: 500;
+    }
+    .dir-price-col {
+      font-size: 1.05em;
+      color: #1076ad;
+      font-weight: 600;
+    }
+    .dir-divider {
+      width: 1.5px;
+      height: 32px;
+      background: #e0e0e0;
+      margin: 0 18px;
+      border-radius: 2px;
+      align-self: center;
+    }
+    @media (max-width: 600px) {
+      .dir-layout-price-row { flex-direction: column; gap: 6px; }
+      .dir-divider { width: 32px; height: 1.5px; margin: 8px 0; }
+    }
     .dir-details { color: #555; font-size: 1em; margin: 8px 0 0 0; padding: 8px 0 0 0; border-top: 1px solid #e0e0e0; font-style: italic; line-height: 1.5; margin-left: 10px !important; }
     .dir-links { margin-top: 12px; display: flex; gap: 16px; justify-content: center; margin-left: 0 !important; }
     .dir-link-btn {
@@ -252,10 +390,16 @@
       text-align: center;
     }
     .dir-link-btn:hover { background: #1076ad; color: #fff; border: 1.5px solid #1076ad; }
+    #directory-count {
+      text-align: center;
+      font-size: 1.08em;
+      font-weight: 500;
+      color: #1076ad;
+      margin: -5px 0 -5px 0;
+      letter-spacing: 0.01em;
+    }
 
-    /* =========================
-       MAP MARKERS & CLUSTERS
-    ========================== */
+    /* MAP MARKERS & CLUSTERS */
     .custom-marker { background: none !important; }
     .custom-cluster {
       background: #fff;
@@ -276,9 +420,7 @@
     }
     .custom-cluster:hover { background: #1076ad; color: #fff; }
 
-    /* =========================
-       RESPONSIVE
-    ========================== */
+    /* RESPONSIVE */
     @media (max-width: 900px) {
       #main-layout { flex-direction: column; }
       #directory {
@@ -293,11 +435,15 @@
         background: transparent;
       }
       #directory-list { display: flex; flex-direction: column; gap: 18px; }
-      #selected-listing-mobile { order: 0; width: 100vw; max-width: 100vw; margin: 0; z-index: 3; }
       #map-container { order: 1; border-radius: 0; max-width: 100vw; height: 340px; }
     }
     @media (max-width: 600px) {
       #map-container { height: 220px; }
+      #search-bar-wrap, #autocomplete-list {
+        width: 40vw !important;
+        min-width: 140px;
+        max-width: 90vw;
+      }
     }
   </style>
 </head>
@@ -306,27 +452,37 @@
     <div id="map-container">
       <div id="map"></div>
       <button id="recenter-btn" title="Recenter Map" aria-label="Recenter Map">⟳</button>
-      <button id="geolocate-btn" title="Find My Location" aria-label="Find My Location">
-        <svg viewBox="0 0 28 28" fill="none">
-          <circle cx="14" cy="14" r="10" stroke="#1076ad" stroke-width="2"/>
-          <circle cx="14" cy="14" r="4" fill="#fff" stroke="#1076ad" stroke-width="2"/>
-          <path d="M14 2v4M14 22v4M2 14h4M22 14h4" stroke="#1076ad" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-      </button>
       <div id="search-bar-wrap">
-        <input id="search-bar" type="text" placeholder="Search for a community..." autocomplete="on" />
+        <input id="search-bar" type="text" placeholder="Search by layout, price, location..." autocomplete="on" />
       </div>
       <div id="autocomplete-list"></div>
     </div>
     <aside id="directory">
-      <div id="filters-sort">
-        <select id="sort-select">
-          <option value="az">Sort: A–Z</option>
-          <option value="za">Sort: Z–A</option>
-          <option value="distance">Distance to Me</option>
-        </select>
+      <div id="directory-filters">
+        <div id="extra-filters">
+          <div class="filter-row">
+            <input id="filter-beds" type="number" step="1" min="0" max="10" placeholder="Beds">
+            <input id="filter-baths" type="number" step="0.5" min="0" max="10" placeholder="Baths">
+            <input id="filter-minprice" type="number" min="0" placeholder="Min $">
+            <input id="filter-maxprice" type="number" min="0" placeholder="Max $">
+          </div>
+          <div class="filter-actions">
+            <button id="filter-available-btn" type="button">Available</button>
+            <select id="sort-select">
+              <option value="az">Sort: A–Z</option>
+              <option value="za">Sort: Z–A</option>
+              <option value="minprice">Price: Low to High</option>
+              <option value="maxprice">Price: High to Low</option>
+            </select>
+            <button id="reset-filters-btn" type="button">Reset</button>
+          </div>
+        </div>
       </div>
+      <div id="directory-count"></div>
       <div id="directory-list"></div>
+      <div id="filter-sort-sticky" style="display:none;">
+        <span class="arrow-up">&#8593;</span> Filter and Sort
+      </div>
     </aside>
   </div>
   <script src="https://unpkg.com/supercluster@7.1.5/dist/supercluster.min.js"></script>
@@ -344,11 +500,22 @@
       active: 'https://sinclaircreative.github.io/tollgroupmap/tollgroupiconclick.png'
     };
 
+    let lowestMinPrice = 0;
+    function setLowestMinPrice(listings) {
+      const prices = listings.map(l => l.minprice).filter(p => typeof p === 'number' && !isNaN(p));
+      lowestMinPrice = prices.length ? Math.min(...prices) : 0;
+      const minPriceInput = document.getElementById('filter-minprice');
+      const maxPriceInput = document.getElementById('filter-maxprice');
+      if (minPriceInput) minPriceInput.min = lowestMinPrice;
+      if (maxPriceInput) maxPriceInput.min = lowestMinPrice;
+    }
+
     // =========================
     // MAP INITIALIZATION
     // =========================
     const initialCenter = [-121.052,47.739];
-    const initialZoom = 6.75;
+    const isMobile = window.innerWidth <= 600;
+    const initialZoom = isMobile ? 5.5 : 6.75;
     const map = new mapboxgl.Map({
       container: 'map',
       style: mapStyle,
@@ -357,36 +524,8 @@
     });
     map.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
-    // =========================
-    // BUTTONS & GEOLOCATION
-    // =========================
     document.getElementById('recenter-btn').onclick = () => {
-      map.flyTo({ center: initialCenter, zoom: initialZoom });
-    };
-
-    let userLocation = null;
-    document.getElementById('geolocate-btn').onclick = () => {
-      if (!navigator.geolocation) {
-        alert('Geolocation is not supported by your browser.');
-        return;
-      }
-      navigator.geolocation.getCurrentPosition(
-        pos => {
-          userLocation = [pos.coords.longitude, pos.coords.latitude];
-          map.flyTo({ center: userLocation, zoom: 11 });
-          if (!window._userMarker) {
-            window._userMarker = new mapboxgl.Marker({ color: "#1076ad" })
-              .setLngLat(userLocation)
-              .addTo(map);
-          } else {
-            window._userMarker.setLngLat(userLocation);
-          }
-          if (document.getElementById('sort-select').value === 'distance') {
-            document.getElementById('sort-select').dispatchEvent(new Event('change'));
-          }
-        },
-        err => alert('Unable to retrieve your location.')
-      );
+      map.flyTo({ center: initialCenter, zoom: initialZoom, duration: 300 });
     };
 
     // =========================
@@ -396,22 +535,41 @@
       return new Promise((resolve, reject) => {
         window.google = { visualization: { Query: { setResponse: res => {
           const rows = res.table.rows;
-          const data = rows.slice(1).map(r => {
-            let imgCell = r.c[5]?.v || '';
+          const data = rows.map(r => {
+            const cells = Array.from({length: 10}, (_, i) => r.c[i]?.v ?? '');
+
+            let imgCell = cells[9];
             if (typeof imgCell === 'object' && imgCell !== null && imgCell.u) imgCell = imgCell.u;
             if (typeof imgCell === 'string' && imgCell.startsWith('=IMAGE(')) {
               const match = imgCell.match(/=IMAGE\("([^"]+)"/);
               if (match) imgCell = match[1];
             }
+
             return {
-              title:   r.c[0]?.v || '',
-              address: r.c[1]?.v || '',
-              details: r.c[2]?.v || '',
-              webpage: r.c[3]?.v || '',
-              gmap:    r.c[4]?.v || '',
+              title:   cells[0] || '',
+              address: cells[1] || '',
+              layout:  cells[2] || '',
+              minprice: (cells[3] !== undefined && cells[3] !== null && cells[3] !== '')
+                ? parseFloat(
+                    typeof cells[3] === "number"
+                      ? cells[3]
+                      : (cells[3] + '').replace(/[^0-9.]/g, '')
+                  )
+                : null,
+              maxprice: (cells[4] !== undefined && cells[4] !== null && cells[4] !== '')
+                ? parseFloat(
+                    typeof cells[4] === "number"
+                      ? cells[4]
+                      : (cells[4] + '').replace(/[^0-9.]/g, '')
+                  )
+                : null,
+              available: (cells[5] || '').toString().trim().toLowerCase(),
+              details: cells[6] || '',
+              webpage: cells[7] || '',
+              gmap:    cells[8] || '',
               image:   imgCell
             };
-          }).filter(r => r.title && r.address);
+          }).filter(r => r.title && r.address && r.title.toLowerCase() !== 'title');
           resolve(data);
         }}}};
         const s = document.createElement('script');
@@ -443,17 +601,11 @@
       return listings.filter(l => Array.isArray(l.coords));
     }
 
-    // =========================
-    // MARKER IMAGE HELPER
-    // =========================
     function getMarkerImg(state = 'normal') {
       const url = markerPNGs[state] || markerPNGs.normal;
       return `<img src="${url}" alt="Map marker" style="width:48px;height:48px;display:block;object-fit:contain;">`;
     }
 
-    // =========================
-    // DISTANCE CALCULATION
-    // =========================
     function getDistanceMeters(coord1, coord2) {
       const toRad = d => d * Math.PI / 180;
       const [lon1, lat1] = coord1;
@@ -476,14 +628,64 @@
       let sortOrder = 'az';
       let searchTerm = '';
       let activeIdx = null;
+      let filterBeds = '';
+      let filterBaths = '';
+      let filterMinPrice = '';
+      let filterMaxPrice = '';
+      let filterAvailableOnly = false;
       const markers = [];
       let clusterIndex = null;
       let clusterMarkers = [];
       const markerElements = [];
-      const directory = document.getElementById('directory-list');
+      const directoryList = document.getElementById('directory-list');
+      const directoryCount = document.getElementById('directory-count');
       const searchBar = document.getElementById('search-bar');
       const sortSelect = document.getElementById('sort-select');
       const autocompleteList = document.getElementById('autocomplete-list');
+      const filterBedsSelect = document.getElementById('filter-beds');
+      const filterBathsSelect = document.getElementById('filter-baths');
+      const filterMinPriceInput = document.getElementById('filter-minprice');
+      const filterMaxPriceInput = document.getElementById('filter-maxprice');
+      const filterAvailableBtn = document.getElementById('filter-available-btn');
+      const directory = document.getElementById('directory');
+      const stickyBar = document.getElementById('filter-sort-sticky');
+      const extraFilters = document.getElementById('extra-filters');
+
+      // --- RESET FILTERS BUTTON ---
+      const resetBtn = document.getElementById('reset-filters-btn');
+      resetBtn.onclick = function() {
+        filterBedsSelect.value = '';
+        filterBathsSelect.value = '';
+        filterMinPriceInput.value = '';
+        filterMaxPriceInput.value = '';
+        filterBeds = '';
+        filterBaths = '';
+        filterMinPrice = '';
+        filterMaxPrice = '';
+        filterAvailableOnly = false;
+        filterAvailableBtn.classList.remove('active');
+        applyFilters();
+      };
+
+      // --- BEDS/BATHS FILTERS: RESET ON 0 ---
+      filterBedsSelect.addEventListener('input', e => {
+        if (parseInt(e.target.value, 10) <= 0) {
+          e.target.value = '';
+          filterBeds = '';
+        } else {
+          filterBeds = e.target.value;
+        }
+        applyFilters();
+      });
+      filterBathsSelect.addEventListener('input', e => {
+        if (parseFloat(e.target.value) <= 0) {
+          e.target.value = '';
+          filterBaths = '';
+        } else {
+          filterBaths = e.target.value;
+        }
+        applyFilters();
+      });
 
       // --- CLUSTERING SETUP ---
       const geojsonFeatures = listings.map((l, i) => ({
@@ -569,7 +771,11 @@
       // --- CLUSTER RENDERING ---
       function renderClusters() {
         clearClusterMarkers();
-        markerElements.forEach(({ marker }) => marker.getElement().style.display = "none");
+
+        // Hide all markers by default
+        markerElements.forEach(({ marker }) => {
+          marker.getElement().style.display = "none";
+        });
 
         const bounds = map.getBounds();
         const zoom = Math.round(map.getZoom());
@@ -578,9 +784,15 @@
           bounds.getEast(), bounds.getNorth()
         ], zoom);
 
+        // Track which marker indices are shown by clusters or as single points
+        const shownIndices = new Set();
+
         clusters.forEach(cluster => {
           const [lng, lat] = cluster.geometry.coordinates;
           if (cluster.properties.cluster) {
+            // Hide all markers that are part of this cluster (do not show them)
+            // (No need to add to shownIndices)
+            // Render the cluster marker
             const count = cluster.properties.point_count;
             const size = 48 * Math.pow(1.05, count - 1);
             const el = document.createElement('div');
@@ -603,16 +815,22 @@
               .setLngLat([lng, lat])
               .addTo(map);
             clusterMarkers.push(marker);
-          } else {
-            const idx = cluster.properties.index;
-            if (typeof idx === "number" && markerElements[idx]) {
-              markerElements[idx].marker.getElement().style.display = "";
-            }
+          } else if (typeof cluster.properties.index === "number") {
+            // This is a single point, show its marker
+            shownIndices.add(cluster.properties.index);
           }
         });
+
+        // Show only markers that are not clustered
+        shownIndices.forEach(idx => {
+          if (markerElements[idx]) {
+            markerElements[idx].marker.getElement().style.display = "";
+          }
+        });
+
+        // After clusters are rendered, update the directory to only show listings in view
+        applyFilters();
       }
-      map.on('moveend', renderClusters);
-      map.on('zoomend', renderClusters);
 
       // --- AUTOCOMPLETE ---
       function showAutocomplete(matches) {
@@ -643,23 +861,21 @@
       }
       searchBar.addEventListener('input', e => {
         searchTerm = e.target.value.trim().toLowerCase();
+        applyFilters();
         if (searchTerm.length > 0) {
           const matches = listings.filter(l =>
-            l.title.toLowerCase().includes(searchTerm) ||
-            l.address.toLowerCase().includes(searchTerm)
+            searchMatch(l, searchTerm)
           ).slice(0, 8);
           showAutocomplete(matches);
         } else {
           autocompleteList.style.display = 'none';
         }
-        applyFilters();
       });
       searchBar.addEventListener('focus', () => {
         const val = searchBar.value.trim().toLowerCase();
         if (val.length > 0) {
           const matches = listings.filter(l =>
-            l.title.toLowerCase().includes(val) ||
-            l.address.toLowerCase().includes(val)
+            searchMatch(l, val)
           ).slice(0, 8);
           showAutocomplete(matches);
         }
@@ -670,17 +886,183 @@
         }
       });
 
+      // --- FILTERS ---
+      filterMinPriceInput.step = 50;
+      filterMaxPriceInput.step = 50;
+
+      filterMinPriceInput.addEventListener('focus', function() {
+        if (!filterMinPriceInput.value || parseInt(filterMinPriceInput.value, 10) < lowestMinPrice) {
+          filterMinPriceInput.value = lowestMinPrice;
+          filterMinPrice = lowestMinPrice;
+          applyFilters();
+        }
+      });
+      filterMaxPriceInput.addEventListener('focus', function() {
+        if (!filterMaxPriceInput.value || parseInt(filterMaxPriceInput.value, 10) < lowestMinPrice) {
+          filterMaxPriceInput.value = lowestMinPrice;
+          filterMaxPrice = lowestMinPrice;
+          applyFilters();
+        }
+      });
+
+      function clampToStep(val, base) {
+        val = Math.round((val - base) / 50) * 50 + base;
+        if (val < base) val = base;
+        return val;
+      }
+
+      filterMinPriceInput.addEventListener('input', e => {
+        let val = parseInt(e.target.value, 10) || 0;
+        if (val <= 0) {
+          e.target.value = '';
+          filterMinPrice = '';
+        } else {
+          val = clampToStep(val, lowestMinPrice);
+          e.target.value = val;
+          filterMinPrice = val;
+        }
+        applyFilters();
+      });
+      filterMinPriceInput.addEventListener('change', e => {
+        let val = parseInt(e.target.value, 10) || 0;
+        if (val <= 0) {
+          e.target.value = '';
+          filterMinPrice = '';
+        } else {
+          val = clampToStep(val, lowestMinPrice);
+          e.target.value = val;
+          filterMinPrice = val;
+        }
+        applyFilters();
+      });
+
+      filterMaxPriceInput.addEventListener('input', e => {
+        let val = parseInt(e.target.value, 10) || 0;
+        if (val <= 0) {
+          e.target.value = '';
+          filterMaxPrice = '';
+        } else {
+          val = clampToStep(val, lowestMinPrice);
+          e.target.value = val;
+          filterMaxPrice = val;
+        }
+        applyFilters();
+      });
+      filterMaxPriceInput.addEventListener('change', e => {
+        let val = parseInt(e.target.value, 10) || 0;
+        if (val <= 0) {
+          e.target.value = '';
+          filterMaxPrice = '';
+        } else {
+          val = clampToStep(val, lowestMinPrice);
+          e.target.value = val;
+          filterMaxPrice = val;
+        }
+        applyFilters();
+      });
+
+      filterAvailableBtn.onclick = function() {
+        filterAvailableOnly = !filterAvailableOnly;
+        filterAvailableBtn.classList.toggle('active', filterAvailableOnly);
+        applyFilters();
+      };
+
+      // --- SORT BUTTON LABELS ---
+      function updateSortLabel() {
+        let label = '';
+        switch (sortSelect.value) {
+          case 'az': label = 'Sort: A–Z'; break;
+          case 'za': label = 'Sort: Z–A'; break;
+          case 'minprice': label = 'Price ↑'; break;
+          case 'maxprice': label = 'Price ↓'; break;
+          default: label = 'Sort';
+        }
+        sortSelect.options[sortSelect.selectedIndex].text = label;
+      }
+      sortSelect.addEventListener('change', e => {
+        sortOrder = e.target.value;
+        updateSortLabel();
+        applyFilters();
+      });
+      updateSortLabel();
+
+      // --- SEARCH/FILTER MATCH LOGIC ---
+      function searchMatch(l, term) {
+        const layout = (l.layout || '').toLowerCase();
+        const bedsBaths = extractBedsBaths(layout);
+        return (
+          (l.title && l.title.toLowerCase().includes(term)) ||
+          (l.address && l.address.toLowerCase().includes(term)) ||
+          (l.details && l.details.toLowerCase().includes(term)) ||
+          (layout && layout.includes(term)) ||
+          (l.minprice && l.minprice.toString().includes(term)) ||
+          (l.maxprice && l.maxprice.toString().includes(term)) ||
+          (l.available && l.available.toLowerCase().includes(term)) ||
+          bedsBaths.some(bb =>
+            (bb.beds && term.includes(bb.beds + ' bed')) ||
+            (bb.baths && term.includes(bb.baths + ' bath'))
+          ) ||
+          bedsBaths.some(bb =>
+            (bb.beds && term === bb.beds.toString()) ||
+            (bb.baths && term === bb.baths.toString())
+          )
+        );
+      }
+
+      function extractBedsBaths(layout) {
+        if (!layout) return [];
+        return layout.split(',').map(opt => {
+          const match = opt.match(/(\d+(?:\.5)?)\s*bed.*?(\d+(?:\.5)?)\s*bath/i);
+          return match ? { beds: parseFloat(match[1]), baths: parseFloat(match[2]) } : {};
+        }).filter(bb => bb.beds && bb.baths);
+      }
+
+      // --- FILTER & DIRECTORY RENDERING ---
+      function applyFilters() {
+        const bounds = map.getBounds();
+        filteredListings = listings.filter(l => {
+          if (!l.coords) return false;
+          const [lng, lat] = l.coords;
+          // Only filter out if truly outside the visible map area
+          if (
+            lng < bounds.getWest() || lng > bounds.getEast() ||
+            lat < bounds.getSouth() || lat > bounds.getNorth()
+          ) return false;
+          if (filterAvailableOnly && l.available !== 'yes') return false;
+          const bedsBaths = extractBedsBaths(l.layout);
+          if (filterBeds && !bedsBaths.some(bb => Number(bb.beds) == Number(filterBeds))) return false;
+          if (filterBaths && !bedsBaths.some(bb => Number(bb.baths) == Number(filterBaths))) return false;
+          if (filterMinPrice && (l.minprice === null || l.minprice < parseInt(filterMinPrice))) return false;
+          if (filterMaxPrice && (l.maxprice === null || l.maxprice > parseInt(filterMaxPrice))) return false;
+          if (searchTerm && !searchMatch(l, searchTerm)) return false;
+          return true;
+        });
+
+        renderDirectory(null);
+        if (directoryCount) {
+          directoryCount.textContent = `${filteredListings.length} communit${filteredListings.length === 1 ? 'y' : 'ies'}`;
+        }
+      }
+
       // --- DIRECTORY RENDERING ---
       function renderDirectory(activeIndex = null) {
-        directory.innerHTML = '';
+        directoryList.innerHTML = '';
+        if (directoryCount) {
+          directoryCount.textContent = `${filteredListings.length} communit${filteredListings.length === 1 ? 'y' : 'ies'}`;
+        }
         let ordered = filteredListings.slice();
         ordered.sort((a, b) => {
           if (sortOrder === 'az') return a.title.localeCompare(b.title);
           if (sortOrder === 'za') return b.title.localeCompare(a.title);
-          if (sortOrder === 'distance' && userLocation) {
-            const da = getDistanceMeters(a.coords, userLocation);
-            const db = getDistanceMeters(b.coords, userLocation);
-            return da - db;
+          if (sortOrder === 'minprice') {
+            const aVal = a.minprice ?? Infinity;
+            const bVal = b.minprice ?? Infinity;
+            return aVal - bVal;
+          }
+          if (sortOrder === 'maxprice') {
+            const aVal = a.maxprice ?? -Infinity;
+            const bVal = b.maxprice ?? -Infinity;
+            return bVal - aVal;
           }
           return 0;
         });
@@ -697,6 +1079,36 @@
           const match = l.address.match(/([^,]+,\s*[A-Z]{2})/);
           if (match) cityState = match[1].trim();
           const detailsId = `details-${i}`;
+          const bedsBaths = extractBedsBaths(l.layout);
+          let minBeds = null, maxBeds = null, minBaths = null, maxBaths = null;
+          if (bedsBaths.length) {
+            minBeds = Math.min(...bedsBaths.map(bb => Number(bb.beds)));
+            maxBeds = Math.max(...bedsBaths.map(bb => Number(bb.beds)));
+            minBaths = Math.min(...bedsBaths.map(bb => Number(bb.baths)));
+            maxBaths = Math.max(...bedsBaths.map(bb => Number(bb.baths)));
+          }
+          let bedBathText = '';
+          if (minBeds !== null && maxBeds !== null && minBeds !== maxBeds) {
+            bedBathText += `${minBeds}–${maxBeds} Bed`;
+          } else if (minBeds !== null) {
+            bedBathText += `${minBeds} Bed`;
+          }
+          if (minBaths !== null && maxBaths !== null && minBaths !== maxBaths) {
+            bedBathText += `  ${minBaths}–${maxBaths} Bath`;
+          } else if (minBaths !== null) {
+            bedBathText += `  ${minBaths} Bath`;
+          }
+          bedBathText = bedBathText.trim();
+
+          let priceText = '';
+          if (l.minprice !== null && l.maxprice !== null && l.minprice !== l.maxprice) {
+            priceText = `$${l.minprice.toLocaleString()} - $${l.maxprice.toLocaleString()}`;
+          } else if (l.minprice !== null) {
+            priceText = `$${l.minprice.toLocaleString()}`;
+          } else if (l.maxprice !== null) {
+            priceText = `$${l.maxprice.toLocaleString()}`;
+          }
+
           const div = document.createElement('div');
           div.className = 'directory-item' + (i === activeIdx ? ' active' : '');
           div.tabIndex = 0;
@@ -706,18 +1118,23 @@
               ${l.image ? `<img src="${l.image}" alt="${l.title}">` : `<div class="no-img"></div>`}
             </div>
             <div class="dir-info">
-              <div style="display: flex; align-items: flex-start; gap: 0; flex-wrap: wrap; justify-content: space-between;">
+              <div style="display: flex; align-items: center;">
                 <div style="flex:1 1 0; min-width:0;">
                   <div class="dir-title">${l.title}</div>
                   <div class="dir-address">${cityState}</div>
                 </div>
-                <div style="display:flex; align-items:center; justify-content:center; flex:0 0 180px;">
+                <div style="display: flex; align-items: center; justify-content: center; flex: 0 1 180px; min-width: 0;">
                   <button class="dir-details-btn"
                     data-details-id="${detailsId}"
-                    style="border:none; background:#d4ecf7; color:#1076ad; border-radius:6px; padding:6px 18px; font-weight:600; cursor:pointer; font-size:1em; margin:0 auto;">
+                    style="border:none; background:#d4ecf7; color:#1076ad; border-radius:6px; padding:6px 18px; font-weight:600; cursor:pointer; font-size:1em;">
                     Details
                   </button>
                 </div>
+              </div>
+              <div class="dir-layout-price-row">
+                <div class="dir-layout-col">${bedBathText}</div>
+                <div class="dir-divider"></div>
+                <div class="dir-price-col">${priceText}</div>
               </div>
               <div id="${detailsId}" class="dir-details-section" style="display:none; margin-top:10px;">
                 ${l.details ? `<div class="dir-details">${l.details.replace(/\r?\n/g, '<br>')}</div>` : ''}
@@ -725,7 +1142,6 @@
                   ${l.webpage ? `<a class="dir-link-btn" href="${l.webpage}" target="_blank">Property Page</a>` : ''}
                   ${l.gmap ? `<a class="dir-link-btn" href="${l.gmap}" target="_blank">Google Maps</a>` : ''}
                 </div>
-                ${sortOrder === 'distance' && userLocation ? `<div class="dir-distance">${Math.round(getDistanceMeters(l.coords, userLocation)/1609)} mi away</div>` : ''}
               </div>
             </div>
           `;
@@ -759,11 +1175,10 @@
               );
             }
           });
-          directory.appendChild(div);
+          directoryList.appendChild(div);
         });
       }
 
-      // --- MARKER STATE HELPERS ---
       function setActiveMarker(idx) {
         activeIdx = idx;
         markers.forEach((m, mi) => {
@@ -780,8 +1195,6 @@
           if (activeDiv) activeDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }, 100);
       }
-
-      // --- CLUSTER FINDER ---
       function findClusterMarkerForListing(listingIdx) {
         return clusterMarkers.find(cm => {
           const id = cm.getElement().dataset.clusterId;
@@ -790,35 +1203,6 @@
           return leaves.some(leaf => leaf.properties.index === listingIdx);
         });
       }
-
-      // --- FILTERS & SORT ---
-      function applyFilters() {
-        filteredListings = listings.filter(l =>
-          (!searchTerm ||
-            l.title.toLowerCase().includes(searchTerm) ||
-            l.address.toLowerCase().includes(searchTerm) ||
-            (l.webpage && l.webpage.toLowerCase().includes(searchTerm)) ||
-            (l.gmap && l.gmap.toLowerCase().includes(searchTerm))
-          )
-        );
-        renderDirectory(null);
-      }
-      sortSelect.addEventListener('change', e => {
-        sortOrder = e.target.value;
-        if (sortOrder === 'distance' && !userLocation) {
-          document.getElementById('geolocate-btn').click();
-        } else {
-          renderDirectory(null);
-        }
-      });
-
-      // --- INITIAL RENDER ---
-      renderDirectory();
-      renderClusters();
-      map.on('moveend', renderClusters);
-      map.on('zoomend', renderClusters);
-
-      // --- ZOOM TO PROPERTY & NEARBY ---
       function zoomToPropertyAndNearby(idx, listings) {
         const thisCoords = listings[idx].coords;
         let minDist = Infinity, nearestCoords = null;
@@ -834,7 +1218,7 @@
         if (nearestCoords) {
           const bounds = new mapboxgl.LngLatBounds(thisCoords, thisCoords);
           bounds.extend(nearestCoords);
-          map.fitBounds(bounds, { padding: 120, maxZoom: 15, duration: 500 });
+          map.fitBounds(bounds, { padding: 10, maxZoom: 15, duration: 500 });
           map.once('moveend', () => {
             const closerZoom = Math.min(map.getZoom() * 1, 16);
             map.easeTo({ center: thisCoords, zoom: closerZoom, duration: 400 });
@@ -843,6 +1227,45 @@
           map.flyTo({ center: thisCoords, zoom: Math.min(15 * 1.2, 16), duration: 700 });
         }
       }
+
+      // --- INITIAL RENDER ---
+      renderDirectory();
+      renderClusters();
+      map.on('moveend', renderClusters);
+      map.on('zoomend', renderClusters);
+
+      // --- Sticky "Filter and Sort" arrow logic ---
+      function checkStickyBar() {
+        // Show sticky bar if filter bar is scrolled out of view in the directory
+        const filtersRect = extraFilters.getBoundingClientRect();
+        const dirRect = directory.getBoundingClientRect();
+        // Find the left/right/top of the directory in viewport
+        const dirLeft = dirRect.left;
+        const dirTop = dirRect.top;
+        // Position sticky bar at the top of the directory, matching its width and left
+        if (filtersRect.bottom < dirRect.top + 8) {
+          stickyBar.style.display = 'block';
+          stickyBar.style.left = dirLeft + 'px';
+          stickyBar.style.width = dirRect.width + 'px';
+          stickyBar.style.top = Math.max(dirTop, 0) + 'px';
+        } else {
+          stickyBar.style.display = 'none';
+        }
+      }
+      directory.addEventListener('scroll', checkStickyBar);
+      window.addEventListener('resize', checkStickyBar);
+      window.addEventListener('scroll', checkStickyBar);
+      setTimeout(checkStickyBar, 500);
+
+      // Scroll to top of filters when sticky bar is clicked
+      stickyBar.onclick = () => {
+        directory.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+
+      // Center text for all filters
+      document.querySelectorAll('#extra-filters input, #extra-filters select, #extra-filters button').forEach(el => {
+        el.style.textAlign = 'center';
+      });
     }
 
     // =========================
@@ -852,6 +1275,7 @@
       try {
         const listings = await fetchSheetData();
         const geocoded = await geocodeListings(listings);
+        setLowestMinPrice(geocoded);
         addMarkersAndDirectory(geocoded);
       } catch (e) {
         alert('Failed to load listings.');
